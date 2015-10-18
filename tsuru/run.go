@@ -19,6 +19,7 @@ type appRun struct {
 	cmd.GuessingCommand
 	fs   *gnuflag.FlagSet
 	once bool
+	interactive bool
 }
 
 func (c *appRun) Info() *cmd.Info {
@@ -26,10 +27,14 @@ func (c *appRun) Info() *cmd.Info {
 all commands is the root of the application.
 
 If you use the [[--once]] flag tsuru will run the command only in one unit.
-Otherwise, it will run the command in all units.`
+Otherwise, it will run the command in all units.
+
+If you use the [[--interactive]] flag, tsuru will run the command in interactive mode.
+Note that --interactive implies --once=true.`
+
 	return &cmd.Info{
 		Name:    "app-run",
-		Usage:   "app-run <command> [commandarg1] [commandarg2] ... [commandargn] [-a/--app appname] [-o/--once]",
+		Usage:   "app-run <command> [commandarg1] [commandarg2] ... [commandargn] [-a/--app appname] [-o/--once] [-i/--interactive]",
 		Desc:    desc,
 		MinArgs: 1,
 	}
@@ -41,7 +46,7 @@ func (c *appRun) Run(context *cmd.Context, client *cmd.Client) error {
 	if err != nil {
 		return err
 	}
-	url, err := cmd.GetURL(fmt.Sprintf("/apps/%s/run?once=%t", appName, c.once))
+	url, err := cmd.GetURL(fmt.Sprintf("/apps/%s/run?once=%t&interactive=%t", appName, c.once, c.interactive))
 	if err != nil {
 		return err
 	}
@@ -73,6 +78,8 @@ func (c *appRun) Flags() *gnuflag.FlagSet {
 		c.fs = c.GuessingCommand.Flags()
 		c.fs.BoolVar(&c.once, "once", false, "Running only one unit")
 		c.fs.BoolVar(&c.once, "o", false, "Running only one unit")
+		c.fs.BoolVar(&c.interactive, "interactive", false, "Running in interactive mode")
+		c.fs.BoolVar(&c.interactive, "i", false, "Running in interactive mode")
 	}
 	return c.fs
 }
